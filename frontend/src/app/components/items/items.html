@@ -1,0 +1,30 @@
+<h2>Items</h2>
+
+<!-- Add new item -->
+<div>
+  <input type="text" placeholder="New item name" [(ngModel)]="newItemName" />
+  <button (click)="addItem()">Add Item</button>
+</div>
+
+<hr />
+
+<!-- Items list -->
+<ul>
+  <li *ngFor="let item of items; trackBy: trackById">
+    <!-- Edit mode -->
+    <span *ngIf="editingItemId === item.id">
+      <input type="text" [(ngModel)]="editedName" />
+      <button (click)="saveEdit(item.id)">Save</button>
+      <button (click)="cancelEdit()">Cancel</button>
+    </span>
+
+    <!-- Display mode -->
+    <span *ngIf="editingItemId !== item.id">
+      {{ item.name }} (Qty: {{ item.quantity }})
+      <button (click)="startEdit(item)">Edit</button>
+      <button (click)="deleteItem(item.id)">Delete</button>
+    </span>
+  </li>
+</ul>
+
+<p *ngIf="items.length === 0">No items found.</p>
