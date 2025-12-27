@@ -1,0 +1,36 @@
+# ------------------------
+# OS Files
+# ------------------------
+.DS_Store
+Thumbs.db
+
+# ------------------------
+# Node / Angular
+# ------------------------
+node_modules/
+dist/
+out-tsc/
+.angular/
+coverage/
+npm-debug.log
+yarn-error.log
+
+# ------------------------
+# .NET / C# / Visual Studio
+# ------------------------
+bin/
+obj/
+*.user
+*.suo
+*.log
+*.vs/
+*.nupkg
+*.exe
+*.dll
+*.pdb
+
+# ------------------------
+# Environment / Secrets
+# ------------------------
+.env
+*.local
