@@ -10,14 +10,17 @@ var builder = WebApplication.CreateBuilder(args);
 // ----------------------
 // Database
 // ----------------------
+//builder.Services.AddDbContext<AppDbContext>(options =>
+  //  Microsoft.EntityFrameworkCore.SqliteDbContextOptionsBuilderExtensions
+    //    .UseSqlite(
+      //      options,
+        //    builder.Configuration.GetConnectionString("DefaultConnection")
+        //)
+//);
 builder.Services.AddDbContext<AppDbContext>(options =>
-    Microsoft.EntityFrameworkCore.SqliteDbContextOptionsBuilderExtensions
-        .UseSqlite(
-            options,
-            builder.Configuration.GetConnectionString("DefaultConnection")
-        )
-);
-
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    ));
 // ----------------------
 // Controllers & Swagger
 // ----------------------
