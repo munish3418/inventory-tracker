@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-frontend
+  namespace: inventory-tracker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: inventory-frontend
+  template:
+    metadata:
+      labels:
+        app: inventory-frontend
+    spec:
+      containers:
+      - name: inventory-frontend
+        image: acrinventorymunish123.azurecr.io/inventory-frontend:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: BACKEND_API_URL
+          value: "http://backend-service:8080"
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+          limits:
+            cpu: "400m"
+            memory: "512Mi"
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: inventory-tracker
+spec:
+  type: LoadBalancer
+  selector:
+    app: inventory-frontend
+  ports:
+  - port: 80
+    targetPort: 80

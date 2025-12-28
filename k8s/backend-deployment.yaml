@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-backend
+  namespace: inventory-tracker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: inventory-backend
+  template:
+    metadata:
+      labels:
+        app: inventory-backend
+    spec:
+      containers:
+      - name: inventory-backend
+        image: acrinventorymunish123.azurecr.io/inventory-backend:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ConnectionStrings__DefaultConnection
+          value: "Server=tcp:sql-inventory-tracker-munish.database.windows.net,1433;Initial Catalog=InventoryTrackerDb;Persist Security Info=False;User ID=inventoryadmin;Password=Pass@1234;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: inventory-tracker
+spec:
+  type: ClusterIP
+  selector:
+    app: inventory-backend
+  ports:
+  - port: 8080
+    targetPort: 8080

@@ -4,18 +4,20 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 
 export interface User {
-  id?: number;       // optional, assigned by backend
+  id?: number;
   username: string;
-  password?: string; // optional in stored user
+  password?: string;
   email: string;
-  token?: string;    // optional JWT
+  token?: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
-  private apiUrl = 'http://localhost:5095/api/users';
+  // ✅ IMPORTANT: relative URL (goes via Nginx)
+  private apiUrl = '/api/users';
+
   private currentUser: User | null = null;
 
   constructor(private http: HttpClient) {}
@@ -27,11 +29,17 @@ export class UserService {
   login(credentials: { username: string; password: string }): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/login`, credentials).pipe(
       tap(res => {
-        // Store the user info including id and email
-        this.currentUser = { id: res.userId, username: credentials.username, email: res.email, token: res.token };
+        this.currentUser = {
+          id: res.userId,
+          username: credentials.username,
+          email: res.email,
+          token: res.token
+        };
+
         localStorage.setItem('userId', res.userId.toString());
         localStorage.setItem('email', res.email);
         localStorage.setItem('token', res.token || '');
+
         console.log('UserService: login successful, stored user:', this.currentUser);
       })
     );
