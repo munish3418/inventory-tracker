@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  backend:
+    image: inventory-backend:latest
+    container_name: inventory-backend
+    build:
+      context: ./backend/InventoryTracker.Api
+      dockerfile: Dockerfile
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=tcp:sql-inventory-tracker-munish.database.windows.net,1433;Initial Catalog=InventoryTrackerDb;Persist Security Info=False;User ID=inventoryadmin;Password=Pass@1234;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5095:8080"
+    networks:
+      - inventory-network
+
+  frontend:
+    image: inventory-frontend:latest
+    container_name: inventory-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    networks:
+      - inventory-network
+
+networks:
+  inventory-network:
+    driver: bridge
