@@ -23,39 +23,50 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout code
+      # 1️⃣ Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Login to Azure using service principal JSON
+      # 2️⃣ Login to Azure using service principal JSON
       - name: Login to Azure
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Login to Azure Container Registry
+      # 3️⃣ Login to Azure Container Registry with token
       - name: Login to ACR
-        run: az acr login --name $ACR_NAME
+        run: |
+          TOKEN=$(az acr login --name $ACR_NAME --expose-token --output tsv --query accessToken)
+          echo $TOKEN | docker login $ACR_LOGIN_SERVER --username 00000000-0000-0000-0000-000000000000 --password-stdin
 
-      # Build & Push Docker images (AMD64)
+      # 4️⃣ Build & Push Docker images (AMD64)
       - name: Build & Push Docker images
         run: |
-          docker buildx create --use
-          docker compose build
-          docker compose push
+          docker buildx create --use --name mybuilder
+          docker buildx inspect --bootstrap
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            -f Dockerfile.backend -t $ACR_LOGIN_SERVER/inventory-backend:latest ./backend
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            -f Dockerfile.frontend -t $ACR_LOGIN_SERVER/inventory-frontend:latest ./frontend
 
-      # Get AKS credentials
+      # 5️⃣ Get AKS credentials
       - name: Get AKS credentials
-        run: az aks get-credentials \
-              --resource-group $RESOURCE_GROUP \
-              --name $AKS_CLUSTER \
-              --overwrite-existing
+        run: |
+          az aks get-credentials \
+            --resource-group $RESOURCE_GROUP \
+            --name $AKS_CLUSTER \
+            --overwrite-existing
 
-      # Deploy manifests from k8s/ folder
+      # 6️⃣ Deploy manifests from k8s/ folder
       - name: Deploy to AKS
-        run: kubectl apply -n $NAMESPACE -f k8s/
+        run: |
+          kubectl apply -n $NAMESPACE -f k8s/
 
-      # Restart deployments to pick up new images
+      # 7️⃣ Restart deployments to pick up new images
       - name: Restart deployments
         run: |
           kubectl rollout restart deployment inventory-backend -n $NAMESPACE
