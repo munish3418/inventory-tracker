@@ -1,9 +1,15 @@
 name: Build & Deploy to AKS
 
+# Trigger on push to main branch
 on:
   push:
     branches:
       - main
+
+# Required for Azure login with service principal
+permissions:
+  contents: read
+  id-token: write
 
 env:
   ACR_NAME: acrinventorymunish123
@@ -17,26 +23,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Login to Azure using service principal JSON
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      # Login to Azure Container Registry
       - name: Login to ACR
         run: az acr login --name $ACR_NAME
 
-      - name: Build & Push Docker images (AMD64)
+      # Build & Push Docker images (AMD64)
+      - name: Build & Push Docker images
         run: |
           docker buildx create --use
           docker compose build
           docker compose push
 
+      # Get AKS credentials
       - name: Get AKS credentials
         run: |
           az aks get-credentials \
@@ -44,10 +52,12 @@ jobs:
             --name $AKS_CLUSTER \
             --overwrite-existing
 
+      # Deploy manifests from k8s/ folder
       - name: Deploy to AKS
         run: |
           kubectl apply -n $NAMESPACE -f k8s/
 
+      # Restart deployments to pick up new images
       - name: Restart deployments
         run: |
           kubectl rollout restart deployment inventory-backend -n $NAMESPACE
