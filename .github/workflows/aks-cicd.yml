@@ -47,11 +47,11 @@ jobs:
           docker buildx build \
             --platform linux/amd64 \
             --push \
-            -f Dockerfile.backend -t $ACR_LOGIN_SERVER/inventory-backend:latest ./backend
+            -f backend/Dockerfile -t $ACR_LOGIN_SERVER/inventory-backend:latest ./backend
           docker buildx build \
             --platform linux/amd64 \
             --push \
-            -f Dockerfile.frontend -t $ACR_LOGIN_SERVER/inventory-frontend:latest ./frontend
+            -f frontend/Dockerfile -t $ACR_LOGIN_SERVER/inventory-frontend:latest ./frontend
 
       # 5️⃣ Get AKS credentials
       - name: Get AKS credentials
