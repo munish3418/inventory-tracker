@@ -1,0 +1,54 @@
+name: Build & Deploy to AKS
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  ACR_NAME: acrinventorymunish123
+  ACR_LOGIN_SERVER: acrinventorymunish123.azurecr.io
+  RESOURCE_GROUP: rg-inventory-tracker
+  AKS_CLUSTER: aks-inventory-tracker
+  NAMESPACE: inventory-tracker
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+
+      - name: Login to ACR
+        run: az acr login --name $ACR_NAME
+
+      - name: Build & Push Docker images (AMD64)
+        run: |
+          docker buildx create --use
+          docker compose build
+          docker compose push
+
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials \
+            --resource-group $RESOURCE_GROUP \
+            --name $AKS_CLUSTER \
+            --overwrite-existing
+
+      - name: Deploy to AKS
+        run: |
+          kubectl apply -n $NAMESPACE -f k8s/
+
+      - name: Restart deployments
+        run: |
+          kubectl rollout restart deployment inventory-backend -n $NAMESPACE
+          kubectl rollout restart deployment inventory-frontend -n $NAMESPACE
