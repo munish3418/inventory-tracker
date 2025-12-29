@@ -33,27 +33,35 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # 3️⃣ Login to Azure Container Registry with token
+      # 3️⃣ Login to Azure Container Registry
       - name: Login to ACR
         run: |
           TOKEN=$(az acr login --name $ACR_NAME --expose-token --output tsv --query accessToken)
           echo $TOKEN | docker login $ACR_LOGIN_SERVER --username 00000000-0000-0000-0000-000000000000 --password-stdin
 
-      # 4️⃣ Build & Push Docker images (AMD64)
-      - name: Build & Push Docker images
+      # 4️⃣ Build & Push Backend Docker image
+      - name: Build & Push Backend
         run: |
           docker buildx create --use --name mybuilder
           docker buildx inspect --bootstrap
           docker buildx build \
             --platform linux/amd64 \
             --push \
-            -f backend/Dockerfile -t $ACR_LOGIN_SERVER/inventory-backend:latest ./backend
+            -f backend/InventoryTracker.Api/Dockerfile \
+            -t $ACR_LOGIN_SERVER/inventory-backend:latest \
+            ./backend/InventoryTracker.Api
+
+      # 5️⃣ Build & Push Frontend Docker image
+      - name: Build & Push Frontend
+        run: |
           docker buildx build \
             --platform linux/amd64 \
             --push \
-            -f frontend/Dockerfile -t $ACR_LOGIN_SERVER/inventory-frontend:latest ./frontend
+            -f frontend/Dockerfile \
+            -t $ACR_LOGIN_SERVER/inventory-frontend:latest \
+            ./frontend
 
-      # 5️⃣ Get AKS credentials
+      # 6️⃣ Get AKS credentials
       - name: Get AKS credentials
         run: |
           az aks get-credentials \
@@ -61,12 +69,12 @@ jobs:
             --name $AKS_CLUSTER \
             --overwrite-existing
 
-      # 6️⃣ Deploy manifests from k8s/ folder
+      # 7️⃣ Deploy manifests to AKS
       - name: Deploy to AKS
         run: |
           kubectl apply -n $NAMESPACE -f k8s/
 
-      # 7️⃣ Restart deployments to pick up new images
+      # 8️⃣ Restart deployments to pick up new images
       - name: Restart deployments
         run: |
           kubectl rollout restart deployment inventory-backend -n $NAMESPACE
