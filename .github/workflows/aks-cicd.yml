@@ -46,16 +46,14 @@ jobs:
 
       # Get AKS credentials
       - name: Get AKS credentials
-        run: |
-          az aks get-credentials \
-            --resource-group $RESOURCE_GROUP \
-            --name $AKS_CLUSTER \
-            --overwrite-existing
+        run: az aks get-credentials \
+              --resource-group $RESOURCE_GROUP \
+              --name $AKS_CLUSTER \
+              --overwrite-existing
 
       # Deploy manifests from k8s/ folder
       - name: Deploy to AKS
-        run: |
-          kubectl apply -n $NAMESPACE -f k8s/
+        run: kubectl apply -n $NAMESPACE -f k8s/
 
       # Restart deployments to pick up new images
       - name: Restart deployments
