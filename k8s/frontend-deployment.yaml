@@ -13,6 +13,8 @@ spec:
       labels:
         app: inventory-frontend
     spec:
+      nodeSelector:
+        agentpool: nodepool3
       containers:
       - name: inventory-frontend
         image: acrinventorymunish123.azurecr.io/inventory-frontend:latest
