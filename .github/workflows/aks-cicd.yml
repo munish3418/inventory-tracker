@@ -17,6 +17,7 @@ env:
   RESOURCE_GROUP: rg-inventory-tracker
   AKS_CLUSTER: aks-inventory-tracker
   NAMESPACE: inventory-tracker
+  IMAGE_TAG: ${{ github.sha }}  # unique tag per commit
 
 jobs:
   build-and-deploy:
@@ -48,7 +49,7 @@ jobs:
             --platform linux/amd64 \
             --push \
             -f backend/InventoryTracker.Api/Dockerfile \
-            -t $ACR_LOGIN_SERVER/inventory-backend:latest \
+            -t $ACR_LOGIN_SERVER/inventory-backend:${IMAGE_TAG} \
             ./backend/InventoryTracker.Api
 
       # 5️⃣ Build & Push Frontend Docker image
@@ -58,7 +59,7 @@ jobs:
             --platform linux/amd64 \
             --push \
             -f frontend/Dockerfile \
-            -t $ACR_LOGIN_SERVER/inventory-frontend:latest \
+            -t $ACR_LOGIN_SERVER/inventory-frontend:${IMAGE_TAG} \
             ./frontend
 
       # 6️⃣ Get AKS credentials
@@ -70,12 +71,18 @@ jobs:
             --overwrite-existing
 
       # 7️⃣ Deploy manifests to AKS
-      - name: Deploy to AKS
+      - name: Apply Kubernetes manifests
         run: |
           kubectl apply -n $NAMESPACE -f k8s/
 
-      # 8️⃣ Restart deployments to pick up new images
-      - name: Restart deployments
+      # 8️⃣ Update deployments to use new image
+      - name: Update deployment images
         run: |
-          kubectl rollout restart deployment inventory-backend -n $NAMESPACE
-          kubectl rollout restart deployment inventory-frontend -n $NAMESPACE
+          kubectl set image deployment/inventory-backend inventory-backend=$ACR_LOGIN_SERVER/inventory-backend:${IMAGE_TAG} -n $NAMESPACE
+          kubectl set image deployment/inventory-frontend inventory-frontend=$ACR_LOGIN_SERVER/inventory-frontend:${IMAGE_TAG} -n $NAMESPACE
+
+      # 9️⃣ Wait for rollout to finish
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment inventory-backend -n $NAMESPACE
+          kubectl rollout status deployment inventory-frontend -n $NAMESPACE
