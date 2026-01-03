@@ -5,6 +5,8 @@ metadata:
   namespace: inventory-tracker
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: inventory-frontend
@@ -17,7 +19,8 @@ spec:
         agentpool: nodepool3
       containers:
       - name: inventory-frontend
-        image: acrinventorymunish123.azurecr.io/inventory-frontend:latest
+        image: acrinventorymunish123.azurecr.io/inventory-frontend:${IMAGE_TAG}
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
         env:
