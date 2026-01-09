@@ -36,4 +36,11 @@ export class ItemService {
   deleteItem(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  // Suggest quantity from AI
+suggestQuantity(name: string): Observable<{ quantity: number }> {
+  return this.http.get<{ quantity: number }>(
+    `/api/items/suggest-quantity?name=${encodeURIComponent(name)}`
+  );
+}
 }

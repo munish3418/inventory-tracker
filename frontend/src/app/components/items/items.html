@@ -4,13 +4,14 @@
 <div>
   <input
     type="text"
-    placeholder="Add item name"
+    placeholder="Item name"
     [(ngModel)]="newItemName"
+    (blur)="onItemNameBlur()"
   />
 
   <input
     type="number"
-    placeholder="Quantity (optional)"
+    placeholder="{{ aiSuggestedQuantity || 'Quantity' }}"
     [(ngModel)]="newItemQuantity"
     min="1"
   />
@@ -23,7 +24,6 @@
 <!-- Items list -->
 <ul>
   <li *ngFor="let item of items; trackBy: trackById">
-    
     <!-- Edit mode -->
     <span *ngIf="editingItemId === item.id">
       <input type="text" [(ngModel)]="editedName" />
@@ -44,7 +44,6 @@
       <button (click)="startEdit(item)">Edit</button>
       <button (click)="deleteItem(item.id)">Delete</button>
     </span>
-
   </li>
 </ul>
 

@@ -87,7 +87,18 @@ namespace InventoryTracker.Api.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+        [HttpGet("suggest-quantity")]
+        public async Task<IActionResult> SuggestQuantity([FromQuery] string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return BadRequest("Item name required");
 
+            int userId = GetUserIdFromToken();
+
+            int quantity = await _aiService.SuggestQuantityAsync(name, userId);
+
+            return Ok(new { quantity });
+        }
         // 🔐 Helper
         private int GetUserIdFromToken()
         {

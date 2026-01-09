@@ -59,20 +59,24 @@ export class Items implements OnInit {
   }
 
   addItem(): void {
-    if (!this.newItemName.trim() || this.currentUserId === null) return;
+  if (!this.newItemName.trim() || this.currentUserId === null) return;
 
-this.itemService.addItem(this.newItemName, this.newItemQuantity ?? 0).subscribe({
-  next: (createdItem: Item) => {
-    this.ngZone.run(() => {
-      this.items = [...this.items, createdItem];
-      this.newItemName = '';
-      this.newItemQuantity = undefined;
-      this.cdr.detectChanges();
-    });
-  },
-  error: (err: unknown) => console.error('Add item error:', err)
-});
-  }
+  this.itemService.addItem(this.newItemName, this.newItemQuantity ?? 0).subscribe({
+    next: (createdItem: Item) => {
+      this.ngZone.run(() => {
+        this.items = [...this.items, createdItem];
+
+        // Reset fields for next item
+        this.newItemName = '';
+        this.newItemQuantity = undefined;
+        this.aiSuggestedQuantity = undefined;
+
+        this.cdr.detectChanges();
+      });
+    },
+    error: (err: unknown) => console.error('Add item error:', err)
+  });
+}
 
   deleteItem(id: number): void {
     this.itemService.deleteItem(id).subscribe({
@@ -113,4 +117,24 @@ this.itemService.addItem(this.newItemName, this.newItemQuantity ?? 0).subscribe(
   cancelEdit(): void {
     this.editingItemId = null;
   }
+aiSuggestedQuantity?: number;
+
+onItemNameBlur(): void {
+  if (!this.newItemName.trim() || this.currentUserId === null) return;
+
+  this.itemService.suggestQuantity(this.newItemName).subscribe({
+    next: (response: { quantity: number }) => {
+      this.ngZone.run(() => {
+        this.aiSuggestedQuantity = response.quantity;
+        // Only set newItemQuantity if it's empty
+        if (!this.newItemQuantity) {
+          this.newItemQuantity = response.quantity;
+        }
+        this.cdr.detectChanges();
+      });
+    },
+    error: (err) => console.error('AI suggest quantity error:', err)
+  });
+}
+  
 }
