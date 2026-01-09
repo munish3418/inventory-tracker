@@ -25,8 +25,8 @@ export class ItemService {
     return this.http.get<Item[]>(this.apiUrl);
   }
 
-  addItem(name: string): Observable<Item> {
-    return this.http.post<Item>(this.apiUrl, { name });
+  addItem(name: string, quantity: number = 0): Observable<Item> {
+    return this.http.post<Item>(this.apiUrl, { name, quantity });
   }
 
   updateItem(id: number, name: string, quantity: number): Observable<Item> {

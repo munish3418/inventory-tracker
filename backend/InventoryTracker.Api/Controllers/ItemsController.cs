@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using InventoryTracker.Api.Data;
 using InventoryTracker.Api.Models;
+using InventoryTracker.Api.Services.AI;
 
 namespace InventoryTracker.Api.Controllers
 {
@@ -13,10 +14,11 @@ namespace InventoryTracker.Api.Controllers
     public class ItemsController : ControllerBase
     {
         private readonly AppDbContext _context;
-
-        public ItemsController(AppDbContext context)
+        private readonly IAiService _aiService;
+        public ItemsController(AppDbContext context, IAiService aiService)
         {
             _context = context;
+            _aiService = aiService;
         }
 
         // GET: api/items
@@ -38,6 +40,12 @@ namespace InventoryTracker.Api.Controllers
         {
             item.UserId = GetUserIdFromToken();
             item.Timestamp = DateTime.UtcNow;
+             // 🧠 AI logic
+            if (item.Quantity <= 0)
+             {
+                   item.Quantity = await _aiService.SuggestQuantityAsync(item.Name, item.UserId);
+                   Console.WriteLine($"[AI] Quantity suggested for {item.Name}");
+             }
 
             _context.Items.Add(item);
             await _context.SaveChangesAsync();
@@ -61,7 +69,7 @@ namespace InventoryTracker.Api.Controllers
             item.Timestamp = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-            return NoContent();
+            return Ok(item);
         }
 
         // DELETE: api/items/{id}

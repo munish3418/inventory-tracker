@@ -18,6 +18,8 @@ export class Items implements OnInit {
   editingItemId: number | null = null;
   editedName = '';
   currentUserId: number | null = null;
+  newItemQuantity?: number;
+  editedQuantity?: number;
 
   constructor(
     private itemService: ItemService,
@@ -38,9 +40,9 @@ export class Items implements OnInit {
     this.loadItems();
   }
 
-  trackById(index: number, item: Item): number {
-    return item.id;
-  }
+  trackById(index: number, item: Item | null): number {
+  return item?.id ?? index;
+}
 
   loadItems(): void {
     if (this.currentUserId === null) return;
@@ -59,11 +61,12 @@ export class Items implements OnInit {
   addItem(): void {
     if (!this.newItemName.trim() || this.currentUserId === null) return;
 
-this.itemService.addItem(this.newItemName).subscribe({
+this.itemService.addItem(this.newItemName, this.newItemQuantity ?? 0).subscribe({
   next: (createdItem: Item) => {
     this.ngZone.run(() => {
       this.items = [...this.items, createdItem];
       this.newItemName = '';
+      this.newItemQuantity = undefined;
       this.cdr.detectChanges();
     });
   },
@@ -86,12 +89,13 @@ this.itemService.addItem(this.newItemName).subscribe({
   startEdit(item: Item): void {
     this.editingItemId = item.id ?? null;
     this.editedName = item.name;
+    this.editedQuantity = item.quantity;
   }
 
   saveEdit(id: number): void {
     if (!this.editedName.trim() || this.currentUserId === null) return;
 
-    this.itemService.updateItem(id, this.editedName, this.currentUserId).subscribe({
+    this.itemService.updateItem(id, this.editedName, this.editedQuantity ?? 0).subscribe({
       next: (updatedItem: Item) => {
         this.ngZone.run(() => {
           const index = this.items.findIndex(i => i.id === id);

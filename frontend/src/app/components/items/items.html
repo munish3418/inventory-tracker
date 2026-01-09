@@ -2,7 +2,19 @@
 
 <!-- Add new item -->
 <div>
-  <input type="text" placeholder="Add New item name" [(ngModel)]="newItemName" />
+  <input
+    type="text"
+    placeholder="Add item name"
+    [(ngModel)]="newItemName"
+  />
+
+  <input
+    type="number"
+    placeholder="Quantity (optional)"
+    [(ngModel)]="newItemQuantity"
+    min="1"
+  />
+
   <button (click)="addItem()">Add Item</button>
 </div>
 
@@ -11,9 +23,17 @@
 <!-- Items list -->
 <ul>
   <li *ngFor="let item of items; trackBy: trackById">
+    
     <!-- Edit mode -->
     <span *ngIf="editingItemId === item.id">
       <input type="text" [(ngModel)]="editedName" />
+
+      <input
+        type="number"
+        [(ngModel)]="editedQuantity"
+        min="1"
+      />
+
       <button (click)="saveEdit(item.id)">Save</button>
       <button (click)="cancelEdit()">Cancel</button>
     </span>
@@ -24,6 +44,7 @@
       <button (click)="startEdit(item)">Edit</button>
       <button (click)="deleteItem(item.id)">Delete</button>
     </span>
+
   </li>
 </ul>
 
